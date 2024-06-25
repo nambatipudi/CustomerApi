@@ -1,6 +1,8 @@
 
 [![CodeQL](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml)
 
+[![CodeQL](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml)
+
 # CustomerApi
 
 CustomerApi is a RESTful web service for managing customer data. This project includes a .NET 8.0 Web API with SQLite for data storage, Swagger for API documentation, and unit tests for ensuring code quality.
