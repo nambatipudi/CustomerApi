@@ -7,17 +7,27 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CustomerApi.Tests
 {
+    /// <summary>
+    /// Unit tests for the CustomersController.
+    /// </summary>
     public class CustomerControllerTests
     {
         private readonly DbContextOptions<CustomerContext> _dbContextOptions;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CustomerControllerTests"/> class.
+        /// </summary>
         public CustomerControllerTests()
         {
+            // Configure the in-memory database for testing
             _dbContextOptions = new DbContextOptionsBuilder<CustomerContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
         }
 
+        /// <summary>
+        /// Tests the GetCustomers method to ensure it returns all customers.
+        /// </summary>
         [Fact]
         public async Task GetCustomers_ReturnsAllCustomers()
         {
@@ -35,6 +45,9 @@ namespace CustomerApi.Tests
             Assert.Single(result.Value!);
         }
 
+        /// <summary>
+        /// Tests the GetCustomer method to ensure it returns the correct customer by ID.
+        /// </summary>
         [Fact]
         public async Task GetCustomer_ReturnsCustomer()
         {
@@ -54,6 +67,9 @@ namespace CustomerApi.Tests
             Assert.Equal(customer.Id, returnValue.Id);
         }
 
+        /// <summary>
+        /// Tests the GetCustomerByEmail method to ensure it returns the correct customer by email address.
+        /// </summary>
         [Fact]
         public async Task GetCustomerByEmail_ReturnsCustomer()
         {
@@ -73,6 +89,9 @@ namespace CustomerApi.Tests
             Assert.Equal(customer.Email, returnValue.Email);
         }
 
+        /// <summary>
+        /// Tests the PostCustomer method to ensure it returns a bad request for an invalid model.
+        /// </summary>
         [Fact]
         public async Task PostCustomer_InvalidModel_ReturnsBadRequest()
         {
@@ -98,6 +117,9 @@ namespace CustomerApi.Tests
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
 
+        /// <summary>
+        /// Tests the PostCustomer method to ensure it returns the created customer for a valid model.
+        /// </summary>
         [Fact]
         public async Task PostCustomer_ValidModel_ReturnsCreatedAtAction()
         {
@@ -116,6 +138,9 @@ namespace CustomerApi.Tests
             Assert.Equal(customer.Email, returnValue.Email);
         }
 
+        /// <summary>
+        /// Tests the PutCustomer method to ensure it returns a bad request for mismatched IDs.
+        /// </summary>
         [Fact]
         public async Task PutCustomer_MismatchedId_ReturnsBadRequest()
         {
@@ -133,6 +158,9 @@ namespace CustomerApi.Tests
             Assert.IsType<BadRequestResult>(result);
         }
 
+        /// <summary>
+        /// Tests the PutCustomer method to ensure it returns no content for a valid model.
+        /// </summary>
         [Fact]
         public async Task PutCustomer_ValidModel_ReturnsNoContent()
         {
@@ -153,6 +181,9 @@ namespace CustomerApi.Tests
             Assert.IsType<NoContentResult>(result);
         }
 
+        /// <summary>
+        /// Tests the PutCustomer method to ensure it returns a bad request for an invalid model.
+        /// </summary>
         [Fact]
         public async Task PutCustomer_InvalidModel_ReturnsBadRequest()
         {
@@ -183,6 +214,9 @@ namespace CustomerApi.Tests
             Assert.IsType<BadRequestObjectResult>(result);
         }
 
+        /// <summary>
+        /// Tests the DeleteCustomer method to ensure it removes the customer.
+        /// </summary>
         [Fact]
         public async Task DeleteCustomer_RemovesCustomer()
         {
@@ -202,6 +236,9 @@ namespace CustomerApi.Tests
             Assert.Null(customerInDb);
         }
 
+        /// <summary>
+        /// Tests the DeleteCustomer method to ensure it returns not found when the customer does not exist.
+        /// </summary>
         [Fact]
         public async Task DeleteCustomer_ReturnsNotFound_WhenCustomerDoesNotExist()
         {
