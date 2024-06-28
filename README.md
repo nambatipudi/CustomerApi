@@ -1,6 +1,8 @@
 
 [![CodeQL](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml)
 
+[![Docker Image CI](https://github.com/nambatipudi/CustomerApi/actions/workflows/docker-image.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/docker-image.yml)
+
 [![.NET](https://github.com/nambatipudi/CustomerApi/actions/workflows/dotnet.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/dotnet.yml)
 # CustomerApi
 
