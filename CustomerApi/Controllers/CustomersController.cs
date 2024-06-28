@@ -1,167 +1,158 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using CustomerApi.Data;
 using CustomerApi.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CustomerApi.Controllers
 {
     /// <summary>
-    /// API Controller for managing customers.
+    /// Represents a controller for managing customer data.
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly CustomerContext _context;
+        private readonly ICustomerRepository _repository;
+        private readonly ILogger<CustomersController> _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CustomersController"/> class.
-        /// </summary>
-        /// <param name="context">The database context.</param>
-        public CustomersController(CustomerContext context)
+        public CustomersController(ICustomerRepository repository, ILogger<CustomersController> logger)
         {
-            _context = context;
+            _repository = repository;
+            _logger = logger;
+        }
+
+        public CustomersController(ICustomerRepository @object)
+        {
         }
 
         /// <summary>
-        /// Retrieves all customers.
+        /// Retrieves the list of customers.
         /// </summary>
-        /// <returns>A list of customers.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the list of customers.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
         {
-            // Return the list of customers from the database
-            return await _context.Customers.ToListAsync();
+            _logger.LogInformation("Getting all customers");
+            var customers = await _repository.GetCustomersAsync();
+            _logger.LogInformation($"Retrieved {customers?.Count()} customers" );
+
+            return Ok(customers);
         }
 
         /// <summary>
-        /// Retrieves a specific customer by ID.
+        /// Retrieves a customer by their ID.
         /// </summary>
-        /// <param name="id">The ID of the customer.</param>
-        /// <returns>The customer with the specified ID.</returns>
+        /// <param name="id">The ID of the customer to retrieve.</param>
+        /// <returns>An <see cref="ActionResult{T}"/> containing the customer if found, or a <see cref="NotFoundResult"/> if not found.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(int id)
         {
-            // Find the customer by ID
-            var customer = await _context.Customers.FindAsync(id);
-            // If the customer is not found, return a 404 Not Found response
+            _logger.LogInformation("Getting customer with ID {Id}", id);
+            var customer = await _repository.GetCustomerAsync(id);
             if (customer == null)
             {
+                _logger.LogWarning("Customer with ID {Id} not found", id);
                 return NotFound();
             }
-            // Return the customer
-            return customer;
+            _logger.LogInformation("Retrieved customer with ID {Id}", id);
+            return Ok(customer);
         }
 
         /// <summary>
-        /// Retrieves a specific customer by email address.
+        /// Retrieves a customer by their email address.
         /// </summary>
         /// <param name="email">The email address of the customer.</param>
-        /// <returns>The customer with the specified email address.</returns>
+        /// <returns>An <see cref="ActionResult{T}"/> representing the HTTP response containing the customer.</returns>
         [HttpGet("email/{email}")]
         public async Task<ActionResult<Customer>> GetCustomerByEmail(string email)
         {
-            // Find the customer by email
-            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == email);
-            // If the customer is not found, return a 404 Not Found response
+            _logger.LogInformation("Getting customer with email {Email}", email);
+            var customer = await _repository.GetCustomerByEmailAsync(email);
             if (customer == null)
             {
+                _logger.LogWarning("Customer with email {Email} not found", email);
                 return NotFound();
             }
-            // Return the customer
-            return customer;
+            _logger.LogInformation("Retrieved customer with email {Email}", email);
+            return Ok(customer);
         }
 
         /// <summary>
         /// Creates a new customer.
         /// </summary>
-        /// <param name="customer">The customer to create.</param>
-        /// <returns>The created customer.</returns>
+        /// <param name="customer">The customer object to be created.</param>
+        /// <returns>An <see cref="ActionResult"/> representing the HTTP response.</returns>
         [HttpPost]
         public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
-            // Check if the model state is valid
+            _logger.LogInformation("Creating a new customer");
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for customer creation");
                 return BadRequest(ModelState);
             }
-            // Add the customer to the database
-            await _context.Customers.AddAsync(customer);
-            // Save changes to the database
-            await _context.SaveChangesAsync();
-            // Return a 201 Created response with the newly created customer
+
+            await _repository.CreateCustomerAsync(customer);
+            _logger.LogInformation("Created new customer with ID {Id}", customer.Id);
             return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
         }
 
         /// <summary>
-        /// Updates an existing customer.
+        /// Creates multiple customers in the database.
         /// </summary>
-        /// <param name="id">The ID of the customer to update.</param>
-        /// <param name="customer">The updated customer details.</param>
-        /// <returns>No content if successful.</returns>
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(int id, Customer customer)
+        /// <param name="customers">The list of customers to create.</param>
+        /// <returns>An action result containing the created customers.</returns>
+        [HttpPost("batch")]
+        public async Task<ActionResult<List<Customer>>> PostCustomers(List<Customer> customers)
         {
-            // Check if the ID in the URL matches the ID in the customer object
-            if (id != customer.Id)
-            {
-                return BadRequest();
-            }
-
-            // Check if the model state is valid
+            _logger.LogInformation("Creating multiple new customers");
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Invalid model state for batch customer creation");
                 return BadRequest(ModelState);
             }
 
-            // Mark the customer entity as modified
-            _context.Entry(customer).State = EntityState.Modified;
+            await _repository.CreateCustomersAsync(customers);
+            _logger.LogInformation("Created {Count} new customers", customers.Count);
+            return CreatedAtAction("GetCustomers", customers);
+        }
 
-            try
+        /// <summary>
+        /// Updates a customer with the specified ID.
+        /// </summary>
+        /// <param name="id">The ID of the customer to update.</param>
+        /// <param name="customer">The updated customer object.</param>
+        /// <returns>An IActionResult representing the result of the update operation.</returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutCustomer(int id, Customer customer)
+        {
+            _logger.LogInformation("Updating customer with ID {Id}", id);
+            if (id != customer.Id)
             {
-                // Save changes to the database
-                await _context.SaveChangesAsync();
+                _logger.LogWarning("ID mismatch for customer update: {Id} vs {CustomerId}", id, customer.Id);
+                return BadRequest("Id mismatch");
             }
-            catch (DbUpdateConcurrencyException)
+
+            if (!ModelState.IsValid)
             {
-                // Check if the customer still exists
-                if (!await _context.Customers.AnyAsync(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                _logger.LogWarning("Invalid model state for customer update");
+                return BadRequest(ModelState);
             }
-            // Return a 204 No Content response
+
+            await _repository.UpdateCustomerAsync(customer);
+            _logger.LogInformation("Updated customer with ID {Id}", id);
             return NoContent();
         }
 
         /// <summary>
-        /// Deletes a specific customer by ID.
+        /// Deletes a customer with the specified ID.
         /// </summary>
         /// <param name="id">The ID of the customer to delete.</param>
-        /// <returns>No content if successful.</returns>
+        /// <returns>An <see cref="IActionResult"/> representing the result of the deletion.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            // Find the customer by ID
-            var customer = await _context.Customers.FindAsync(id);
-            // If the customer is not found, return a 404 Not Found response
-            if (customer == null)
-            {
-                return NotFound();
-            }
-
-            // Remove the customer from the database
-            _context.Customers.Remove(customer);
-            // Save changes to the database
-            await _context.SaveChangesAsync();
-            // Return a 204 No Content response
+            _logger.LogInformation("Deleting customer with ID {Id}", id);
+            await _repository.DeleteCustomerAsync(id);
+            _logger.LogInformation("Deleted customer with ID {Id}", id);
             return NoContent();
         }
     }
