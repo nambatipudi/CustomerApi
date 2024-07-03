@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "customerapi.fullname" . }}-test-connection"
+  labels:
+    {{- include "customerapi.labels" . | nindent 4 }}
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget', '-q', '-O-', 'http://{{ include "customerapi.fullname" . }}:{{ .Values.service.port }}']

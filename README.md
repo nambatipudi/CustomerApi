@@ -1,9 +1,9 @@
-
 [![CodeQL](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/codeql.yml)
 
 [![Docker Image CI](https://github.com/nambatipudi/CustomerApi/actions/workflows/docker-image.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/docker-image.yml)
 
 [![.NET](https://github.com/nambatipudi/CustomerApi/actions/workflows/dotnet.yml/badge.svg)](https://github.com/nambatipudi/CustomerApi/actions/workflows/dotnet.yml)
+
 # CustomerApi
 
 CustomerApi is a RESTful web service for managing customer data. This project includes a .NET 8.0 Web API with SQLite for data storage, Swagger for API documentation, and unit tests for ensuring code quality.
@@ -132,17 +132,77 @@ Coverage reports will be available in the `TestResults` directory.
 
 ## Deploying with Helm
 
-1. **Navigate to the `helm` Directory**
+### Prerequisites
+
+Ensure you have Helm installed and have access to a Kubernetes cluster.
+
+### Navigate to the Helm Directory
+
+```bash
+cd ./customer-api-helm
+```
+
+### Install the Helm Chart
+
+1. **Build and Push Docker Image**
+
+   Build the Docker image for the Customer API application and push it to your container registry:
 
    ```bash
-   cd helm
+   # Navigate to the application source code directory
+   cd /path/to/customer-api
+
+   # Build the Docker image
+   docker build -t <your-registry>/customer-api:latest .
+
+   # Push the Docker image to your container registry
+   docker push <your-registry>/customer-api:latest
    ```
 
-2. **Install the Helm Chart**
+2. **Update Helm Chart Values**
+
+   Update the `values.yaml` file to set the correct image repository and tag:
+
+   ```yaml
+   image:
+     repository: <your-registry>/customer-api
+     tag: "latest"
+     pullPolicy: IfNotPresent
+   ```
+
+3. **Deploy the Helm Chart**
+
+   Install the Helm chart in your Kubernetes cluster:
 
    ```bash
-   helm install customer-service customer-service
+   helm install customerapi ./customer-api-helm
    ```
+
+   To upgrade an existing release, use:
+
+   ```bash
+   helm upgrade customerapi ./customer-api-helm
+   ```
+
+### Verify the Deployment
+
+Check the status of your deployment:
+
+```bash
+kubectl get deployments
+kubectl get pods
+kubectl get services
+```
+
+### Access the Application
+
+If you have Ingress configured, access the application via the configured host. Otherwise, you can port-forward to access the application:
+
+```bash
+kubectl port-forward svc/customerapi 8080:80
+```
+
+Open your browser and navigate to `http://localhost:8080`.
 
 ## Contributing
 
@@ -151,3 +211,4 @@ Contributions are welcome! Please fork the repository and submit a pull request.
 ## License
 
 This project is licensed under the MIT License.
+
